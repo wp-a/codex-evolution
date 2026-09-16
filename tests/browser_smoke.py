@@ -24,6 +24,117 @@ from codex_evolution.server import EvolutionServer
 from codex_evolution.storage import Store
 
 
+def check_usage_improvement(page, expect, nav, shot, checks, bridge):
+    if not bridge:
+        nav('improve')
+        pending = []
+        page.route('**/api/analysis?*mode=live*', lambda route: pending.append(route))
+        page.select_option('#dataset', 'live')
+        expect(page.locator('#main')).to_have_attribute('aria-busy', 'true', timeout=3000)
+        assert page.locator('#content').evaluate('(el) => el.inert')
+        assert page.locator('#dataset').is_disabled()
+        assert pending
+        pending[0].fulfill(status=500, content_type='application/json', body='{"error":"Synthetic failure"}')
+        expect(page.locator('#dataset')).to_have_value('demo')
+        expect(page.locator('#dataset')).to_be_enabled()
+        assert not page.locator('#content').evaluate('(el) => el.inert')
+        expect(page.locator('.improve-intro')).to_contain_text('演示笔记')
+        page.unroute('**/api/analysis?*mode=live*')
+        checks['dataset_switch_blocks_old_form_and_restores_on_failure'] = True
+    nav('usage')
+    expect(page.locator('.usage-page')).to_be_visible()
+    assert page.locator('.usage-month').count() == 9
+    assert page.locator('.usage-month.is-missing').count() == 3
+    assert page.locator('.usage-model-table tbody tr').count() == 2
+    page.locator('.usage-thread-table [data-thread]').first.click()
+    expect(page.locator('dialog .evidence-item').first).to_be_visible()
+    page.locator('[data-action="close-modal"]').click()
+    with page.expect_download() as download:
+        page.locator('[data-action="export-usage"]').click()
+    exported = json.loads(Path(download.value.path()).read_text())
+    assert exported['summary']['total_tokens'] > 0
+    assert 'threads' not in exported and 'projects' not in exported
+    assert 'demo-04-' not in json.dumps(exported)
+    page.select_option('#fromMonth', '2026-05')
+    expect(page.locator('.usage-month')).to_have_count(5)
+    page.locator('[data-action="reset-filters"]').click()
+    expect(page.locator('.usage-month')).to_have_count(9)
+    shot('usage-dark.png')
+    page.select_option('#dataset', 'live')
+    expect(page.locator('#usage-import-title')).to_have_text('当前范围没有 Token 用量记录')
+    expect(page.locator('.usage-kpi-primary .usage-number')).to_have_text('未记录')
+    nav('improve')
+    expect(page.locator('.improve-workspace')).to_be_visible()
+    expect(page.locator('.improve-suggestions')).to_contain_text('当前筛选没有自然消息')
+    page.locator('#improve-goal').fill('修复搜索页面，保留 <script> 字符原样')
+    page.locator('#improve-success').fill('空结果、加载失败和成功结果均有明确状态')
+    page.locator('[data-action="improve-generate"]').click()
+    expect(page.locator('#improve-prompt')).to_have_value(re.compile('本次目标.*待补充', re.S))
+    page.locator('#improve-prompt').fill('已编辑的任务简报：只修复搜索页面。')
+    with page.expect_download() as download:
+        page.locator('[data-action="improve-prompt-export"]').click()
+    assert Path(download.value.path()).read_text() == '已编辑的任务简报：只修复搜索页面。'
+    page.locator('[data-action="improve-save"]').click()
+    expect(page.locator('.improve-entry')).to_have_count(0)
+    page.locator('#improve-adjustment').fill('交付时列出已运行的检查 <img src=x onerror=alert(1)>')
+    page.locator('#improve-criteria').fill('能看到测试结果与未解决的问题')
+    page.locator('[data-action="improve-save"]').click()
+    expect(page.locator('.improve-entry')).to_have_count(1)
+    assert page.locator('.improve-entry img').count() == 0
+    page.locator('[data-improve-result="outcome"]').select_option('helpful')
+    page.locator('[data-action="improve-result-save"]').click()
+    expect(page.locator('.improve-entry-head .badge')).to_have_text('待观察')
+    page.locator('[data-improve-result="result"]').fill('发现了一个遗漏的异常路径测试，已补充。')
+    page.locator('[data-action="improve-result-save"]').click()
+    expect(page.locator('.improve-entry-head .badge')).to_have_text('有帮助')
+    with page.expect_download() as download:
+        page.locator('[data-action="improve-export"]').click()
+    journal = json.loads(Path(download.value.path()).read_text())
+    assert journal['mode'] == 'live' and len(journal['entries']) == 1
+    assert journal['entries'][0]['outcome'] == 'helpful'
+    assert journal['entries'][0]['baseline']['natural_messages'] == 0
+    if not bridge:
+        page.locator('[data-action="improve-edit"]').click()
+        page.locator('#improve-adjustment').fill('编辑中的尝试，刷新后继续修改')
+        page.locator('.improve-brief [data-action="improve-draft-save"]').click()
+        page.reload(wait_until='networkidle')
+        # Server's demo default applies on reload; live notes remain separately saved.
+        page.select_option('#dataset', 'live')
+        expect(page.locator('.improve-entry')).to_have_count(1)
+        expect(page.locator('.improve-entry-head .badge')).to_have_text('有帮助')
+        expect(page.locator('[data-action="improve-save"]')).to_have_text('保存修改')
+        page.locator('[data-action="improve-save"]').click()
+        expect(page.locator('.improve-entry')).to_have_count(1)
+        expect(page.locator('.improve-entry h3')).to_have_text('编辑中的尝试，刷新后继续修改')
+    page.select_option('#dataset', 'demo')
+    expect(page.locator('.improve-entry')).to_have_count(0)
+    page.locator('[data-action="improve-adopt"]').first.click()
+    assert page.locator('#improve-adjustment').input_value()
+    page.locator('#improve-criteria').fill('在交付时能看到实际运行的检查和剩余问题。')
+    page.locator('[data-action="improve-save"]').click()
+    expect(page.locator('.improve-entry')).to_have_count(1)
+    page.locator('[data-action="improve-delete"]').click()
+    expect(page.locator('.improve-entry')).to_have_count(1)
+    page.locator('[data-action="improve-delete-confirm"]').click()
+    expect(page.locator('.improve-entry')).to_have_count(0)
+    page.select_option('#dataset', 'live')
+    expect(page.locator('.improve-entry')).to_have_count(1)
+    page.select_option('#dataset', 'demo')
+    for route in ['usage', 'improve']:
+        nav(route)
+        for width in [320, 390, 1024, 1512]:
+            page.set_viewport_size({'width': width, 'height': 1000})
+            assert not page.evaluate('() => document.documentElement.scrollWidth > innerWidth'), f'{route} overflow at {width}'
+        page.locator('[data-action="theme"]').click()
+        expect(page.locator('html')).to_have_attribute('data-theme', 'light')
+        shot(route + '-light.png')
+        page.locator('[data-action="theme"]').click()
+    page.set_viewport_size({'width': 1512, 'height': 1120})
+    checks['usage_filters_missing_data_evidence_export'] = True
+    checks['improvement_brief_validation_results_export_and_isolation'] = True
+    checks['usage_improvement_responsive_widths'] = [320, 390, 1024, 1512]
+
+
 def run():
     parser=argparse.ArgumentParser()
     parser.add_argument('--bridge',action='store_true')
@@ -50,7 +161,7 @@ def run():
                     with urllib.request.urlopen(base+'/') as response: html=response.read().decode()
                     html=re.sub(r'<link[^>]*>','',html)
                     html=re.sub(r'<script.*?</script>','',html,flags=re.S)
-                    html=html.replace('</head>','<style>'+(assets/'styles.css').read_text(encoding='utf-8')+'</style></head>')
+                    html=html.replace('</head>','<style>'+''.join((assets/name).read_text(encoding='utf-8') for name in ['styles.css','usage.css','improve.css'])+'</style></head>')
                     def bridge(url,options):
                         if not str(url).startswith('/api/'): raise ValueError('Test bridge only accepts local API paths')
                         request=urllib.request.Request(base+url,method=options.get('method','GET'),
@@ -67,6 +178,8 @@ def run():
                         return new Response(Uint8Array.from(atob(r.body),c=>c.charCodeAt(0)),{status:r.status,headers:r.headers});
                     };}""")
                     script=(assets/'app.js').read_text(encoding='utf-8').replace('src="/logo.svg"','src="data:image/svg+xml;base64,'+base64.b64encode((assets/'logo.svg').read_bytes()).decode()+'"')
+                    for name in ['usage-ui.js','improve-ui.js']:
+                        page.add_script_tag(content=(assets/name).read_text(encoding='utf-8'))
                     page.add_script_tag(content=script)
                 else:
                     page.goto(base,wait_until='networkidle')
@@ -86,7 +199,7 @@ def run():
                 expect(page.locator('.sidebar-nav')).to_be_visible()
                 assert set(page.locator('.sidebar-nav .nav-item').evaluate_all(
                     '(items)=>items.map(item=>item.dataset.page)'))=={
-                    'start','overview','explorer','timeline','audit','skills','prompts','reports','data'}
+                    'start','overview','usage','improve','explorer','timeline','audit','skills','prompts','reports','data'}
                 expect(page.locator('.start-actions [data-page="data"]')).to_be_visible()
                 expect(page.locator('.start-actions [data-action="try-demo"]')).to_be_visible()
                 shot('start-light.png');checks['first_use_introduction_and_navigation']=True
@@ -122,6 +235,7 @@ def run():
                 page.locator('.heat-cell').first.click();page.wait_for_selector('dialog .evidence-item')
                 assert page.locator('dialog .evidence-item').count()>0
                 checks['heatmap_evidence']=True;close()
+                check_usage_improvement(page, expect, nav, shot, checks, args.bridge)
                 nav('audit');page.locator('[data-action="run-audit"]').click();page.wait_for_selector('.finding')
                 assert page.locator('.finding').count()==6
                 assert page.locator('.protected-item').count()==2

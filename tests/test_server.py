@@ -61,6 +61,49 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request('/api/analysis?mode=other')[0],400)
         self.assertEqual(self.request('/api/analysis?start=2026-99')[0],400)
 
+    def test_usage_http_import_export_and_conversation_separation(self):
+        rows = [
+            {'role': 'user', 'timestamp': '2026-01-01T10:00:00Z',
+             'thread_id': 'private-thread', 'project': '/private/project', 'text': '验证这次修改'},
+            {'type': 'usage', 'timestamp': '2026-01-01T10:00:02Z',
+             'thread_id': 'private-thread', 'project': '/private/project', 'provider': 'openai',
+             'model': 'test-model', 'response_id': 'private-response',
+             'usage': {'input_tokens': 1000, 'cached_input_tokens': 600,
+                       'output_tokens': 200, 'reasoning_output_tokens': 120, 'total_tokens': 1200}},
+        ]
+        body = {'files': [{'name': 'private-source.jsonl', 'text': '\n'.join(map(json.dumps, rows))}]}
+        for _ in range(2):
+            self.assertEqual(self.request('/api/import-upload', body)[0], 200)
+        status, _, usage = self.request('/api/usage?mode=live')
+        self.assertEqual(status, 200)
+        self.assertEqual(usage['summary']['total_tokens'], 1200)
+        self.assertEqual(usage['summary']['response_records'], 1)
+        self.assertEqual(self.request('/api/analysis?mode=live')[2]['summary']['natural_messages'], 1)
+        evidence = self.request('/api/evidence?mode=live&thread=private-thread')[2]
+        self.assertEqual(len(evidence['items']), 1)
+        self.assertEqual(evidence['items'][0]['text'], '验证这次修改')
+        packet = self.request('/api/packet', {'kind': 'retrospective', 'mode': 'live'})[2]
+        self.assertNotIn('private-response', json.dumps(packet))
+        status, headers, exported = self.request('/api/usage-export?mode=live')
+        self.assertEqual(status, 200)
+        self.assertIn('attachment', headers['Content-Disposition'])
+        for private in ['private-thread', '/private/project', 'private-response', 'private-source']:
+            self.assertNotIn(private, json.dumps(exported))
+        self.assertEqual(exported['summary']['total_tokens'], 1200)
+        self.assertIsNone(self.request('/api/usage?mode=live&start=2026-02')[2]['summary']['total_tokens'])
+        self.assertEqual(self.request('/api/usage?start=2026-99')[0], 400)
+        self.assertEqual(self.request('/api/usage', token=False)[0], 403)
+        self.assertEqual(self.request('/api/usage-export', token=False)[0], 403)
+
+    def test_usage_demo_is_synthetic_and_assets_are_served(self):
+        usage = self.request('/api/usage?mode=demo')[2]
+        self.assertGreater(usage['summary']['total_tokens'], 0)
+        self.assertIsNone(self.request('/api/usage?mode=live')[2]['summary']['total_tokens'])
+        self.assertEqual(self.request('/api/analysis?mode=demo')[2]['summary']['natural_messages'], 3086)
+        self.assertEqual(self.request('/api/analysis?mode=demo')[2]['summary']['threads'], 132)
+        for asset in ['usage-ui.js', 'usage.css', 'improve-ui.js', 'improve.css']:
+            self.assertEqual(self.request('/' + asset, token=False)[0], 200)
+
     def test_upload_reimport_and_clear_are_real_storage_operations(self):
         text=json.dumps({'role':'user','thread_id':'upload-thread','timestamp':'2026-01-01T00:00:00Z','text':'继续测试'})
         body={'files':[{'name':'fixture.jsonl','text':text}]}

@@ -57,10 +57,12 @@ Local history formats are internal and version-dependent. Deleted or unpersisted
 
 ## Workspace reference
 
-| Workspace | Functionality in v0.1.1 |
+| Workspace | Functionality in v0.2.0 |
 |---|---|
 | Start here | Feature introduction, three-step guide, actual analysis preview, import and synthetic-demo actions. |
 | Collaboration overview | Monthly prompt-word and task-signal heatmaps, measured trends, activity grid, weighted changes, project/date/timezone filters. |
+| Token usage (`#usage`) | Imported token records by month and model context, high-usage threads, input/output and cache/reasoning details, coverage notes and aggregate JSON export; per-response events and legacy cumulative snapshots remain separate. |
+| Improvement workbench (`#improve`) | Wording-based suggestions, an editable and copyable four-part task brief, browser-local trials with acceptance criteria, your own helpful/not-helpful/inconclusive/pending assessment, result notes and JSON export. |
 | Prompt explorer | Message-level evidence, source filename and line, literal search, word filters, thread context. |
 | Evolution timeline | Monthly topic hints, message counts and actual imported tool-call names/counts; no inferred skill scores. |
 | Instruction audit | `AGENTS.md`, `AGENTS.override.md`, `SKILL.md`; stopping/confirmation/overlap/completion checks, line citations, protected instructions and proposal-only diffs. |
@@ -69,6 +71,29 @@ Local history formats are internal and version-dependent. Deleted or unpersisted
 | Prompt workbench | Five complete, editable prompts: retrospective, anti-bloat, instruction audit, workflow-to-skill and lightweight checkpoint. |
 | Growth report | Seven-signal change ledger, six-row monthly task-signal matrix, heuristic observation anchors, cautious readout and optional four-line protocol; Markdown, standalone HTML, aggregate JSON, monthly CSV and shareable PNG card. |
 | Optional semantic interpretation | Previewable/redacted evidence packet, handoff to an existing Codex session, or explicit opt-in OpenAI Responses API request. |
+
+## Review token usage
+
+Open **Token 用量** from the sidebar, or append `#usage` to your running service URL. In demo mode the page uses synthetic usage records. To inspect your own usage, explicitly import supported records and switch to the imported dataset.
+
+1. Read the coverage note to understand which imported records contain usage.
+2. Review the monthly and model-context breakdowns, then compare the available input and output counts. Cached-input and reasoning fields are detail fields, not extra amounts to add to the total.
+3. Inspect a high-usage thread in its task context. A larger total alone does not establish wasted work.
+4. Use the page's JSON export to save the aggregate breakdown.
+
+Per-response `token_usage_record` events and explicit supported usage records provide the response-level view. Legacy `token_count` events can contain cumulative snapshots; the latest snapshot is presented separately instead of summing repeated cumulative totals. Missing usage is a coverage gap, not zero consumption. The app does not query account quotas or billing and does not calculate prices. Full field and aggregation rules are in [usage data definitions](USAGE_DATA.md).
+
+## Prepare and review one improvement
+
+Open **改进工作台** or append `#improve` to your service URL. You can start with no imported history and no model configuration.
+
+1. Choose a suggestion when relevant, or write your own change to try.
+2. Fill in the task brief's **goal, context, scope and success criteria**. Click **生成任务提示** to generate and save the prompt, review or edit the result, then **复制任务提示** to use it in your next Codex task. **保存草稿** saves edits, and **导出文本** downloads the task prompt.
+3. Enter the change you want to try and the criterion you will use to judge it, then click **保存这次尝试**. The entry also keeps the current summary as context: period, natural-message count, bare-continue rate and verification-word rate.
+4. After the task, add a result note and select **有帮助** (helpful), **没有帮助** (not helpful) or **暂不确定** (inconclusive), then click **保存结果**. These assessments require a written observation; **待观察** (pending) can remain without one. The app records your assessment and does not automatically score your efficiency.
+5. Use **导出改进记录** to keep a JSON copy of the brief, draft and saved entries. An entry can also be edited or deleted after confirmation.
+
+Input stays in page memory until you generate the task prompt or use a save action. Saved briefs and trials use browser `localStorage`, separate from imported history. They stay in the current browser and service origin; a different port, hostname or browser has separate storage. Demo and imported-data entries are separate. Clearing browser data can remove these records. JSON exports include your written brief and notes, so review them before sharing. See the [improvement workbench guide](IMPROVEMENT.md) for an example and interpretation limits.
 
 ## Reports, audits and Skill drafts from the CLI
 

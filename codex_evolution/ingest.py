@@ -14,6 +14,7 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from .usage import normalize_usage
 
 MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_LINE_BYTES = 8 * 1024 * 1024
@@ -49,6 +50,7 @@ class ImportResult:
         "files": 0, "lines": 0, "invalid_json": 0, "unknown_events": 0,
         "invalid_timestamps": 0, "non_natural_users": 0,
         "mirrored_user_records": 0, "truncated_messages": 0, "warnings": [],
+        "invalid_usage_records": 0, "usage_snapshots_without_info": 0,
     })
 
     def merge(self, other: "ImportResult") -> None:
@@ -142,6 +144,38 @@ def parse_objects(objects: list[tuple[int, Any]], source: str) -> ImportResult:
     event_noise = {"token_count", "agent_reasoning", "agent_reasoning_delta",
                    "task_started", "task_complete", "turn_aborted", "context_compacted",
                    "agent_message_delta", "user_message"}
+    usage_meta: dict[str, Any] = {}
+    active_context: dict[str, Any] = {}
+    turn_contexts: dict[str, dict] = {}
+
+    def add_usage(line: int, obj: dict, values, *, kind: str, payload: dict,
+                  normalized: bool = False) -> None:
+        raw_time = obj.get("timestamp", obj.get("ts", obj.get("created_at")))
+        ts = timestamp(raw_time)
+        if not ts:
+            result.diagnostics["invalid_timestamps"] += 1
+            result.diagnostics["invalid_usage_records"] += 1
+            return
+        turn_id = payload.get("turn_id")
+        context = turn_contexts.get(turn_id, {}) if isinstance(turn_id, str) and turn_id else active_context
+        usage_thread = payload.get("thread_id") or usage_meta.get("id") or thread
+        usage = normalize_usage(kind, values,
+                                provider=payload.get("provider") if normalized else usage_meta.get("model_provider"),
+                                model=payload.get("model") if normalized else context.get("model"),
+                                response_id=payload.get("response_id"),
+                                # The rollout adapter assigns ordinary messages to
+                                # `thread`, even when a fork retains an older usage
+                                # owner. Analysis verifies a user record exists in
+                                # this source before exposing this navigation ID.
+                                evidence_thread_id=usage_thread if normalized else thread)
+        if usage is None:
+            result.diagnostics["invalid_usage_records"] += 1
+            return
+        usage_project = (payload.get("project") if normalized else context.get("cwd")) or usage_meta.get("cwd") or project
+        result.messages.append(Message(source, line, str(usage_thread), ts, "usage",
+                                       json.dumps(usage, ensure_ascii=False, separators=(",", ":")),
+                                       "usage", str(usage_project), "", False))
+
     for line, obj in objects:
         if not isinstance(obj, dict):
             result.diagnostics["unknown_events"] += 1
@@ -149,9 +183,26 @@ def parse_objects(objects: list[tuple[int, Any]], source: str) -> ImportResult:
         typ = obj.get("type", "")
         p = obj.get("payload", {})
         p = p if isinstance(p, dict) else {}
-        if typ == "event_msg":
+        if typ == "session_meta":
+            usage_meta = {key: p[key] for key in ("id", "cwd", "model_provider") if isinstance(p.get(key), str)}
+        elif typ == "turn_context":
+            active_context = {key: p[key] for key in ("turn_id", "model", "cwd") if isinstance(p.get(key), str)}
+            if active_context.get("turn_id"):
+                turn_contexts[active_context["turn_id"]] = active_context
+        elif typ == "token_usage_record":
+            add_usage(line, obj, p.get("usage"), kind="response", payload=p)
+        elif typ == "usage":
+            add_usage(line, obj, obj.get("usage"), kind="response", payload=obj, normalized=True)
+        elif typ == "event_msg":
             t = p.get("type", "")
-            if t == "user_message":
+            if t == "token_count":
+                info = p.get("info")
+                if info is None:
+                    result.diagnostics["usage_snapshots_without_info"] += 1
+                else:
+                    values = info.get("total_token_usage") if isinstance(info, dict) else None
+                    add_usage(line, obj, values, kind="legacy_snapshot", payload=p)
+            elif t == "user_message":
                 add(line, obj, "user", content_text(p.get("message", "")), "event")
             elif t == "agent_message":
                 add(line, obj, "assistant", content_text(p.get("message", "")), "event")

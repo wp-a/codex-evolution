@@ -14,12 +14,13 @@ from urllib.parse import parse_qs, urlsplit
 from . import __version__
 from .analytics import analyze, evidence, mine_workflows, prepare, select
 from .audit import audit_instructions, audit_plan, load_files
-from .demo import demo_messages
+from .demo import demo_messages, demo_usage_events
 from .ingest import ImportResult, import_path, parse_text
 from .prompt_library import prompts, get_prompt
 from .provider import capabilities, make_packet, interpret
 from .reports import public_analysis, report_markdown, report_html, report_csv
 from .storage import Store
+from .usage import analyze_usage, public_usage
 
 WEB = Path(__file__).parent / "web"
 MAX_BODY = 32 * 1024 * 1024
@@ -41,7 +42,7 @@ class EvolutionServer(ThreadingHTTPServer):
     def rows(self, mode: str):
         if mode not in {"demo", "live"}:
             raise ValueError("Unknown dataset mode.")
-        return demo_messages() if mode == "demo" else self.store.messages()
+        return demo_messages() + demo_usage_events() if mode == "demo" else self.store.messages()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -97,7 +98,9 @@ class Handler(BaseHTTPRequestHandler):
             self.guard(api=path.startswith("/api/"))
             if not path.startswith("/api/"):
                 allowed = {"/": "index.html", "/index.html": "index.html", "/app.js": "app.js",
-                           "/styles.css": "styles.css", "/logo.svg": "logo.svg", "/favicon.ico": "logo.svg"}
+                           "/styles.css": "styles.css", "/logo.svg": "logo.svg", "/favicon.ico": "logo.svg",
+                           "/usage-ui.js": "usage-ui.js", "/usage.css": "usage.css",
+                           "/improve-ui.js": "improve-ui.js", "/improve.css": "improve.css"}
                 filename = allowed.get(path)
                 if not filename:
                     return self.reply({"error": "Not found"}, 404)
@@ -116,6 +119,11 @@ class Handler(BaseHTTPRequestHandler):
             rows = self.server.rows(mode)
             if path == "/api/analysis":
                 return self.reply(analyze(rows, mode=mode, **filters))
+            if path == "/api/usage":
+                return self.reply(analyze_usage(rows, mode=mode, **filters))
+            if path == "/api/usage-export":
+                data = analyze_usage(rows, mode=mode, **filters)
+                return self.reply(public_usage(data), filename="codex-evolution-usage.json")
             if path == "/api/evidence":
                 return self.reply(evidence(rows, **filters, **{key: query.get(key, "") for key in ("word", "stage", "month", "query", "thread")},
                                            offset=max(0, int(query.get("offset", 0))), limit=min(100, max(1, int(query.get("limit", 40))))))

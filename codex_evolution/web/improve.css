@@ -1,0 +1,61 @@
+/* The improvement workspace inherits the application's light and dark tokens. */
+.improve-workspace{display:grid;gap:26px;min-width:0}
+.improve-intro{padding:0 0 3px;display:flex;justify-content:space-between;gap:24px;align-items:flex-start}
+.improve-intro p{font-size:17px;font-weight:550;line-height:1.7;max-width:420px}
+.improve-intro>span{font-size:12px;color:var(--muted);line-height:1.8;max-width:370px}
+.improve-storage-warning{margin:0}
+.improve-recommendations{padding:0;margin:0;list-style:none}
+.improve-recommendations li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:start;gap:20px;padding:25px 0;border-top:1px solid var(--line)}
+.improve-recommendations li:first-child{border-top:0;padding-top:8px}
+.improve-recommendations li:last-child{padding-bottom:2px}
+.improve-step{font-size:12px;font-variant-numeric:tabular-nums;color:var(--accent);padding-top:3px}
+.improve-recommendations h3{font-size:16px;line-height:1.6;font-weight:580}
+.improve-recommendations p{font-size:13px;line-height:1.85;color:var(--muted);margin-top:8px;max-width:740px;overflow-wrap:anywhere}
+.improve-recommendations .improve-reason{color:var(--subtle);font-size:12px;margin-top:4px}
+.improve-recommendations .btn{margin-top:4px}
+.improve-brief-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.06fr);gap:32px}
+.improve-brief-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 17px;align-content:start}
+.improve-field{display:flex;flex-direction:column;gap:9px;min-width:0}
+.improve-field>span{font-size:13px;font-weight:540;line-height:1.65}
+.improve-field textarea{display:block;border:1px solid var(--line);border-radius:10px;background:var(--panel2);padding:12px 13px;line-height:1.75;font-size:13px;width:100%;min-width:0;resize:vertical;min-height:95px;transition:border-color .15s}
+.improve-field textarea::placeholder{color:var(--subtle);opacity:.9}
+.improve-field textarea:focus{border-color:var(--accent)}
+.improve-field select{width:100%;max-width:220px;min-height:42px;font-size:13px}
+.improve-brief-fields>.improve-buttons{grid-column:1/-1}
+.improve-prompt-editor{padding-left:30px;border-left:1px solid var(--line);min-width:0;display:flex;flex-direction:column;gap:16px}
+.improve-prompt-editor textarea{min-height:330px;background:var(--panel);font-size:13px}
+.improve-buttons{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.improve-buttons .btn{min-height:42px}
+.improve-hint,.improve-baseline-preview{font-size:12px;color:var(--subtle);line-height:1.85;overflow-wrap:anywhere}
+.improve-compose{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px}
+.improve-baseline-preview{margin:16px 0}
+.improve-journal>.panel-body>.improve-field textarea{min-height:75px}
+.improve-journal-list{border-top:1px solid var(--line)}
+.improve-entry{padding:28px 26px;border-top:1px solid var(--line)}
+.improve-entry:first-child{border-top:0}
+.improve-entry-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.improve-entry-head>div{min-width:0}
+.improve-entry-head .badge{flex-shrink:0;margin-top:23px}
+.improve-date{font-size:11px;font-variant-numeric:tabular-nums;color:var(--subtle);letter-spacing:.25px}
+.improve-entry h3{margin-top:5px;font-size:15px;line-height:1.8;font-weight:570;white-space:pre-wrap;overflow-wrap:anywhere}
+.improve-entry-detail{margin:18px 0 23px;display:grid;gap:13px}
+.improve-entry-detail>div{display:grid;grid-template-columns:108px minmax(0,1fr);gap:14px;font-size:12px;line-height:1.8}
+.improve-entry-detail dt{color:var(--subtle)}
+.improve-entry-detail dd{margin:0;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.improve-baseline-numbers{display:block;font-variant-numeric:tabular-nums;margin-top:4px}
+.improve-result-grid{display:grid;grid-template-columns:180px minmax(0,1fr);gap:22px}
+.improve-result-grid textarea{min-height:85px}
+.improve-entry-actions{display:flex;gap:13px;flex-wrap:wrap;align-items:center;margin-top:17px}
+.improve-entry-actions .btn{min-height:40px}
+.improve-delete-confirm{font-size:12px;color:var(--muted)}
+.improve-journal-foot{flex-wrap:wrap}
+.improve-journal-foot>span{max-width:720px;line-height:1.9}
+.improve-journal-foot .btn{flex-shrink:0}
+.improve-empty{padding:24px 2px 16px;max-width:660px}
+.improve-empty h3{font-size:15px;line-height:1.7;font-weight:550}
+.improve-empty p{font-size:13px;line-height:1.85;color:var(--muted);margin:9px 0 15px}
+.improve-journal-list>.improve-empty{padding:30px 26px 24px}
+@media(max-width:1250px){.improve-brief-grid{grid-template-columns:minmax(0,1fr) minmax(0,.95fr);gap:24px}.improve-brief-fields{grid-template-columns:1fr;gap:17px}.improve-prompt-editor{padding-left:24px}.improve-prompt-editor textarea{min-height:550px}.improve-entry{padding:26px 22px}}
+@media(max-width:1050px){.improve-intro{flex-direction:column;gap:9px}.improve-intro p,.improve-intro>span{max-width:660px}.improve-recommendations li{grid-template-columns:24px minmax(0,1fr);gap:0 14px}.improve-step{grid-row:1/3}.improve-recommendations li>.btn{grid-column:2;justify-self:start;margin-top:14px}}
+@media(max-width:780px){.improve-workspace{gap:22px}.improve-brief-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.improve-brief-grid{grid-template-columns:minmax(0,1fr);gap:26px}.improve-prompt-editor{padding:24px 0 0;border-left:0;border-top:1px solid var(--line)}.improve-prompt-editor textarea{min-height:320px}.improve-field textarea{font-size:14px;padding:12px}.improve-field>span{font-size:13px}.improve-field select,.improve-workspace .btn{min-height:44px}.improve-entry{padding:25px 20px}.improve-result-grid{grid-template-columns:150px minmax(0,1fr);gap:17px}.improve-journal-list>.improve-empty{padding:25px 20px 20px}}
+@media(max-width:480px){.improve-intro p{font-size:16px}.improve-intro>span{font-size:12px}.improve-recommendations li{padding:23px 0}.improve-recommendations h3{font-size:15px}.improve-recommendations p{font-size:13px}.improve-brief-fields,.improve-compose,.improve-result-grid{grid-template-columns:minmax(0,1fr)}.improve-compose{gap:17px}.improve-prompt-editor textarea{min-height:320px}.improve-field select{max-width:none}.improve-buttons{gap:9px}.improve-workspace .btn{white-space:normal;text-align:left}.improve-entry{padding:24px 17px}.improve-entry-head{flex-wrap:wrap;gap:9px}.improve-entry-head .badge{margin-top:0}.improve-entry-detail>div{grid-template-columns:1fr;gap:4px}.improve-entry-detail{gap:16px}.improve-entry-actions{gap:8px 13px}.improve-journal-list>.improve-empty{padding:23px 17px 17px}.improve-baseline-preview{font-size:11px;line-height:1.9}}

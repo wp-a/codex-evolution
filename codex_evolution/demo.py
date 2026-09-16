@@ -1,9 +1,11 @@
 """Deterministic SYNTHETIC data, unrelated to any person's private history."""
 from __future__ import annotations
 import calendar
+import json
 import random
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
+from .usage import normalize_usage
 
 COUNTS = [160, 210, 96, 420, 390, 420, 720, 520, 150]
 PROJECTS = ["orbital-web", "vector-lab", "flow-agent", "deploy-kit", "paper-studio"]
@@ -58,3 +60,32 @@ def demo_messages() -> list[dict]:
                              "role": "tool", "text": "[synthetic tool event]", "channel": "normalized",
                              "project": project, "tool": "exec_command" if month < 7 else "spawn_agent", "natural": False})
     return sorted(rows, key=lambda r: (r["timestamp"], r["line"]))
+
+
+@lru_cache(maxsize=1)
+def demo_usage_events() -> list[dict]:
+    """Synthetic usage with deliberate gaps and separate legacy-only months."""
+    events = []
+    for index, row in enumerate(r for r in demo_messages() if r["role"] == "user"):
+        month = int(row["timestamp"][5:7])
+        if month <= 2:
+            if row["line"] != 1:
+                continue
+            kind = "legacy_snapshot"
+        elif month == 3 or index % 3:
+            continue
+        else:
+            kind = "response"
+        incoming = 1200 + index % 17 * 320
+        outgoing = 180 + index % 11 * 80
+        payload = normalize_usage(kind, {
+            "input_tokens": incoming, "cached_input_tokens": incoming // 2,
+            "output_tokens": outgoing,
+            "reasoning_output_tokens": None if month == 4 else outgoing // 3,
+            "total_tokens": incoming + outgoing,
+        }, provider="synthetic", model="demo-reasoning" if index % 2 else "demo-general",
+            response_id=f"synthetic-response-{index}")
+        events.append({**row, "uid": f"demo-usage-{index}", "line": row["line"] + 1000,
+                       "role": "usage", "channel": "usage", "natural": False,
+                       "text": json.dumps(payload, ensure_ascii=False)})
+    return events

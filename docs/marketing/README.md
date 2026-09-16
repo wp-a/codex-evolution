@@ -13,7 +13,7 @@ Eight ready-to-use PNG images, built from the actual application interface. All 
 | [poster-zh.png](poster-zh.png) | 1080 × 1440 | Portrait social post |
 | [social-preview.png](social-preview.png) | 1280 × 640 | Link sharing / GitHub social-preview asset |
 
-[Browse the image gallery](index.html) locally in a browser. [Launch copy](../launch/LAUNCH_COPY.md) includes Chinese article, Xiaohongshu, WeChat Moments and English X drafts. Repository HTML files are source files on GitHub; download the media kit to open the gallery locally.
+[Browse the image gallery](index.html) locally in a browser. Repository HTML files are source files on GitHub; download the images to open the gallery locally.
 
 ## Visual direction
 

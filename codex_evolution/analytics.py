@@ -68,7 +68,8 @@ def prepare(rows: list[dict], tz: str = "UTC") -> tuple[list[dict], int]:
         zone = timezone.utc if tz == "UTC" else ZoneInfo(tz)
     except ZoneInfoNotFoundError as exc:
         raise ValueError(f"Unknown timezone {tz}; install OS timezone data or choose UTC.") from exc
-    canonical, duplicates = canonical_messages(rows)
+    # Usage is retained for the dedicated ledger, never as conversation evidence.
+    canonical, duplicates = canonical_messages([row for row in rows if row.get("role") != "usage"])
     for r in canonical:
         dt = datetime.fromisoformat(r["timestamp"]).astimezone(zone)
         r["month"] = dt.strftime("%Y-%m")

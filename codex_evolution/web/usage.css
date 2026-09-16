@@ -1,0 +1,64 @@
+/* Token usage shares the application's light/dark macOS palette. */
+.usage-page{min-width:0}
+.usage-intro-note{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px;color:var(--muted);font-size:14px;line-height:1.85}
+.usage-intro-note p{max-width:780px}.usage-intro-note strong{font-weight:600;color:var(--text)}
+.usage-intro-note .btn{flex-shrink:0}
+.usage-kpis{gap:14px;margin-bottom:24px}
+.usage-kpi{padding:24px 22px;min-width:0}
+.usage-kpi .kpi-title{font-size:14px;letter-spacing:0;font-weight:500;display:block}
+.usage-kpi .kpi-value{font-size:clamp(25px,2.5vw,36px);font-weight:610;letter-spacing:-1px;margin:15px 0 12px;overflow-wrap:anywhere}
+.usage-number{font-variant-numeric:tabular-nums}
+.usage-kpi .kpi-note{font-size:12px;line-height:1.75;color:var(--muted)}
+.usage-kpi-primary{background:var(--accent-wash);border-color:color-mix(in srgb,var(--accent) 15%,var(--line))}
+.usage-kpi-primary .kpi-value{color:var(--accent)}
+.usage-kpi-detail{display:block;color:var(--subtle);margin-top:3px}
+.usage-missing{font-size:.85em;letter-spacing:0;color:var(--subtle);font-weight:400}
+.usage-unit{font-size:12px;letter-spacing:0;color:var(--subtle);margin-left:6px}
+.usage-section{margin-bottom:24px}
+.usage-section .panel-head{padding:25px 26px 22px;align-items:flex-start}
+.usage-section .panel-head h2{font-size:18px;line-height:1.5;letter-spacing:-.3px}
+.usage-section .panel-head p{font-size:13px;line-height:1.8;max-width:760px;margin-top:7px}
+.usage-section .panel-head .btn{flex-shrink:0;font-size:13px}
+.usage-section .panel-body{padding:0 26px 25px}
+.usage-caption{font-size:12px;white-space:nowrap;color:var(--subtle);padding-top:5px}
+.usage-months{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.usage-month{display:grid;grid-template-columns:78px minmax(0,1fr) 118px;align-items:center;gap:20px;min-height:40px}
+.usage-month-label{font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.usage-month-track{display:block;height:23px;border-radius:5px;background:var(--panel2);overflow:hidden;position:relative}
+.usage-month-bar{display:block;height:100%;border-radius:5px;background:var(--accent)}
+.usage-month-value{text-align:right;font-size:14px;line-height:1.4}
+.usage-month-value small{display:block;font-size:11px;color:var(--subtle);margin-top:3px}
+.usage-month-gap{position:absolute;inset:0;text-align:center;color:var(--subtle);font-size:13px}
+.usage-month.is-missing .usage-month-track{background:transparent;border:1px dashed var(--line)}
+.usage-table-scroll{position:relative;width:100%;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;border-radius:8px}
+.usage-table-scroll:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.usage-table{width:100%;border-collapse:collapse;text-align:left;font-size:13px;line-height:1.65;min-width:660px}
+.usage-table th,.usage-table td{padding:17px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.usage-table th:first-child,.usage-table td:first-child{padding-left:0}
+.usage-table th:last-child,.usage-table td:last-child{padding-right:0}
+.usage-table thead th{font-size:12px;color:var(--subtle);font-weight:500;white-space:nowrap;padding-top:0;padding-bottom:14px}
+.usage-table tbody th{font-weight:550;max-width:260px;min-width:170px;overflow-wrap:anywhere}
+.usage-table tr:last-child>th,.usage-table tr:last-child>td{border-bottom:0}
+.usage-table small{display:block;font-size:11px;font-weight:400;color:var(--subtle);margin-top:5px}
+.usage-model-name{display:block;max-width:290px;overflow-wrap:anywhere}
+.usage-table .usage-numeric{font-variant-numeric:tabular-nums;white-space:nowrap}
+.usage-table .usage-total{font-weight:600}
+.usage-dates{white-space:nowrap;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.usage-thread-table{min-width:735px}.usage-legacy-table{min-width:850px}
+.usage-legacy .panel-head h2{color:var(--text)}
+.usage-legacy .badge{flex-shrink:0;margin-top:3px}
+.usage-import-state{padding:34px;margin-bottom:24px;background:var(--panel)}
+.usage-state-marker{display:block;font-size:12px;color:var(--accent);margin-bottom:10px}
+.usage-import-state h2{font-size:24px;letter-spacing:-.5px;line-height:1.4}
+.usage-import-state p{color:var(--muted);font-size:14px;max-width:680px;line-height:1.85;margin:12px 0 22px}
+.usage-empty-note{font-size:14px;color:var(--subtle);line-height:1.9;padding:8px 0 3px}
+.usage-coverage{padding:8px 2px 20px;max-width:1020px}
+.usage-coverage h2{font-size:17px;line-height:1.6;letter-spacing:-.2px;margin-bottom:10px}
+.usage-coverage p,.usage-coverage li{font-size:13px;color:var(--muted);line-height:1.9;overflow-wrap:anywhere}
+.usage-coverage p+p{margin-top:7px}.usage-coverage ul{margin:12px 0 0;padding-left:19px}.usage-coverage li+li{margin-top:6px}
+.usage-coverage-facts{display:flex;flex-wrap:wrap;gap:16px 32px;margin:20px 0;padding:18px 0;border-block:1px solid var(--line)}.usage-coverage-facts>div{min-width:145px}.usage-coverage-facts dt{font-size:12px;color:var(--subtle)}.usage-coverage-facts dd{font-size:17px;font-variant-numeric:tabular-nums;margin:5px 0 0;color:var(--text)}.usage-coverage-facts dd span{font-size:11px;color:var(--subtle)}
+.usage-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:1250px){.usage-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.usage-kpi .kpi-value{font-size:32px}.usage-intro-note{align-items:flex-start;gap:18px}.usage-section .panel-head{flex-wrap:wrap}}
+@media(max-width:780px){.usage-intro-note{flex-direction:column;gap:15px;font-size:14px}.usage-section .panel-head{padding:23px 20px 20px}.usage-section .panel-body{padding:0 20px 23px}.usage-kpi{padding:21px 18px}.usage-month{grid-template-columns:70px minmax(0,1fr) 104px;gap:13px}.usage-month-value{font-size:13px}.usage-section .panel-head .btn{min-height:44px}.usage-table .btn{min-height:44px}.usage-import-state{padding:27px 23px}.usage-import-state h2{font-size:22px}}
+@media(max-width:480px){.usage-kpis{gap:10px}.usage-kpi{padding:18px 14px}.usage-kpi .kpi-title{font-size:12px}.usage-kpi .kpi-value{font-size:25px;letter-spacing:-.6px;margin:12px 0 10px}.usage-kpi .kpi-note{font-size:11px}.usage-kpi-detail{margin-top:5px}.usage-section{margin-bottom:18px}.usage-section .panel-head{padding:21px 17px 18px;gap:9px}.usage-section .panel-head h2{font-size:17px}.usage-section .panel-head p{font-size:12px}.usage-section .panel-body{padding:0 17px 20px}.usage-caption{font-size:11px}.usage-months{gap:16px}.usage-month{grid-template-columns:58px minmax(0,1fr) 85px;gap:9px}.usage-month-label{font-size:11px}.usage-month-value{font-size:12px}.usage-month-value small{font-size:10px}.usage-month-track{height:20px;border-radius:4px}.usage-month-bar{border-radius:4px}.usage-import-state{padding:25px 20px}.usage-import-state h2{font-size:20px}.usage-import-state p{font-size:13px}.usage-intro-note .btn,.usage-import-state .btn{min-height:44px}.usage-coverage{padding:5px 1px 15px}.usage-coverage p,.usage-coverage li{font-size:12px}}
+@media(max-width:360px){.usage-kpi{padding:16px 12px}.usage-kpi .kpi-value{font-size:23px}.usage-kpis{gap:8px}.usage-month{grid-template-columns:54px minmax(0,1fr) 80px;gap:7px}}

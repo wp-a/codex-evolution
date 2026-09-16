@@ -44,8 +44,8 @@ const PATHS = {
 const icon = (name, size=17) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${PATHS[name] || PATHS.spark}"/></svg>`;
 const NAV = [
   ['start','开始使用','spark'],['data','导入与隐私','database'],
-  ['overview','使用概览','overview'],['explorer','对话与提示词','grid'],['timeline','月度回顾','timeline'],['reports','复盘报告','report'],
-  ['audit','规则检查','audit'],['prompts','提示词模板','prompt'],['skills','流程与 Skill','skill'],
+  ['overview','使用概览','overview'],['usage','Token 用量','bolt'],['explorer','对话与提示词','grid'],['timeline','月度回顾','timeline'],['reports','复盘报告','report'],
+  ['improve','改进工作台','up'],['audit','规则检查','audit'],['prompts','提示词模板','prompt'],['skills','流程与 Skill','skill'],
 ];
 const STAGE_LABELS = {goal:'明确目标',plan:'规划范围',execute:'执行交付',verify:'验证证据',iterate:'反馈迭代',reflect:'总结收尾'};
 const SAMPLE_PLAN = `# 项目计划（合成示例）\n目标：为个人 Codex 历史生成可解释的协作分析报告。\n范围：本机 JSONL 导入、消息统计与可视化；不做云端账号全量同步。\n验收标准：一份测试样本可重算命中数和分母，热力图能定位原文。\n\n1. 先建立微服务与事件总线，再做本地统计。\n2. 每一步修改都进行 SHA256 哈希比对。\n3. 每个阶段设置三个 Gate，并执行三轮审核。\n4. 为所有可能的输入增加多层兜底。\n5. 生产部署前必须获得用户明确批准。\n6. 对下载的发布制品验证 SHA256 完整性。`;
@@ -55,7 +55,7 @@ const SAMPLE_FILES = [
 ];
 const state = {
   page:'start', mode:'demo', start:'', end:'', project:'', tz:'UTC', metric:'rate',
-  data:null, status:null, prompts:[], workflows:[], auditKind:'instructions',
+  data:null, usage:null, status:null, prompts:[], workflows:[], auditKind:'instructions',
   files:structuredClone(SAMPLE_FILES), selectedFile:0, plan:SAMPLE_PLAN, auditPath:'', audit:null,
   promptContext:'', explorerQuery:'', explorerWord:'', evidence:null, packet:null,
   loading:false, renderId:0, evidenceRequestId:0, theme:'light',
@@ -88,8 +88,8 @@ function showModal(title,body,wide=false){const modal=$('#modal');modal.style.wi
 function empty(title,description,button=''){return `<div class="empty">${icon('spark',28)}<h3>${h(title)}</h3><p>${h(description)}</p>${button}</div>`;}
 function shell(){
   $('#app').innerHTML=`<aside class="sidebar" id="sidebar"><a href="#start" class="brand" data-page="start"><img src="/logo.svg" alt=""><div class="brand-copy"><div class="brand-title">Codex Evolution</div><div class="brand-sub">个人协作工作台</div></div></a>
-  <nav class="sidebar-nav" aria-label="主要功能"><div class="nav-heading">开始</div>${NAV.slice(0,2).map(navItem).join('')}<div class="nav-heading">回顾历史</div>${NAV.slice(2,6).map(navItem).join('')}<div class="nav-heading">改进协作</div>${NAV.slice(6).map(navItem).join('')}</nav>
-  <div class="sidebar-bottom"><div class="local-note"><div class="flex green">${icon('lock',14)}<strong>你的记录，留在本机。</strong></div><p>默认不联网、不上传。<br>模型深审需单独选择与确认。</p></div><div class="version"><span>v0.1.1 · MIT</span><span>LOCAL / ${icon('check',11)}</span></div></div></aside>
+  <nav class="sidebar-nav" aria-label="主要功能"><div class="nav-heading">开始</div>${NAV.slice(0,2).map(navItem).join('')}<div class="nav-heading">回顾历史</div>${NAV.slice(2,7).map(navItem).join('')}<div class="nav-heading">改进协作</div>${NAV.slice(7).map(navItem).join('')}</nav>
+  <div class="sidebar-bottom"><div class="local-note"><div class="flex green">${icon('lock',14)}<strong>你的记录，留在本机。</strong></div><p>默认不联网、不上传。<br>模型深审需单独选择与确认。</p></div><div class="version"><span>v0.2.0 · MIT</span><span>LOCAL / ${icon('check',11)}</span></div></div></aside>
   <div class="shell"><header class="topbar"><div class="flex"><button class="icon-btn mobile-toggle" data-action="menu" aria-label="打开导航">${icon('menu')}</button><div class="breadcrumb"><span>个人工作台</span><span class="crumb-slash">/</span><strong id="crumb">开始使用</strong></div></div><div class="top-actions"><label class="select-wrap"><span class="dataset-label" id="datasetHint"></span><select id="dataset" aria-label="选择数据集"><option value="demo">合成演示数据</option><option value="live">我的本机数据</option></select></label><button class="command-button" data-action="command" aria-label="搜索功能，快捷键 Ctrl 或 Command K">${icon('search',14)}<span>搜索功能</span><kbd>⌘ K</kbd></button><button class="icon-btn" data-action="theme" aria-label="切换明暗主题">${icon('sun',16)}</button></div></header>
   <main id="main" tabindex="-1"><div id="content"><div class="loading">正在读取工作区</div></div><footer class="footer"><span class="footer-logo">Codex Evolution <span class="subtle">· 让协作有所积累</span></span><span>独立社区项目，与 OpenAI 无隶属关系</span></footer></main></div>`;
 }
@@ -98,7 +98,9 @@ function startPage(){
  const d=state.data, months=d.monthly.slice(-6);
  const words=['please','continue','verify'].map(key=>d.words.find(word=>word.key===key)).filter(Boolean);
  const jobs=[
+  ['看清 Token 用在哪里','查看记录中的输入、输出和缓存用量，按月份与模型上下文比较，回看用量较高的线程。','usage','查看 Token 用量'],
   ['回看我的使用习惯','提示词如何变化，任务如何推进。按月份查看趋势，再回到原始对话核对。','reports','查看复盘报告'],
+  ['让下一次使用更有方向','准备任务简报，选择一次小调整，写下验收标准与实际结果。逐步积累适合自己的方法。','improve','打开改进工作台'],
   ['检查让协作变复杂的规则','查看项目计划、AGENTS.md 和 Skill 中的重复要求与潜在冲突，得到可审阅的建议。','audit','检查项目规则'],
   ['留下可以复用的方法','编辑现成的提示词模板，或从重复对话流程中整理 Skill 草稿，留给下一次任务。','prompts','浏览提示词模板'],
  ];
@@ -112,10 +114,12 @@ function startPage(){
   <section class="start-steps" aria-labelledby="start-steps-title"><div class="start-section-head"><h2 id="start-steps-title">第一次使用，只需三步。</h2></div><ol><li><strong>先体验一份示例</strong><p>无需准备数据，看看一份协作报告能告诉你什么。</p></li><li><strong>导入自己的历史</strong><p>选择本机 Codex 历史目录或 JSON / JSONL 文件。</p></li><li><strong>选择一次小改进</strong><p>核对一条变化，检查一份规则，或复用一个提示词。</p></li></ol><p class="preview-caption">规则检查和提示词模板可直接使用，无需先导入历史。</p></section>
   <div class="start-privacy">${icon('lock',18)}<p>记录在本机处理，原始文件保持只读。使用示例不会读取你的对话；需要模型解读时，由你选择发送的材料。</p></div></div>`;
 }
-function filters(){
- const months=state.data?.available_months||[];const options=selected=>`<option value="">全部</option>${months.map(m=>`<option value="${m}" ${selected===m?'selected':''}>${m}</option>`).join('')}`;
- return `<div class="filters"><label>${icon('calendar',13)} 起始 <select id="fromMonth" aria-label="起始月份">${options(state.start)}</select></label><label>至 <select id="toMonth" aria-label="结束月份">${options(state.end)}</select></label><label>${icon('folder',13)}<select id="projectFilter" aria-label="筛选项目"><option value="">所有项目</option>${(state.data?.projects||[]).map(p=>`<option value="${h(p.value)}" ${p.value===state.project?'selected':''}>${h(p.label)}</option>`).join('')}</select></label><label><select id="timezone" aria-label="统计时区">${[...new Set(['UTC','Asia/Shanghai','America/Los_Angeles',state.tz])].map(t=>`<option value="${h(t)}" ${state.tz===t?'selected':''}>${h(t)}</option>`).join('')}</select></label><button class="btn ghost small" data-action="reset-filters" title="重置筛选">${icon('refresh',12)}</button><span class="filter-spacer"></span><span class="period">${h(state.data?.summary.start||'—')} — ${h(state.data?.summary.end||'—')}</span></div>`;
+function filters(data=state.data){
+ const months=data?.available_months||[];const options=selected=>`<option value="">全部</option>${months.map(m=>`<option value="${m}" ${selected===m?'selected':''}>${m}</option>`).join('')}`;
+ return `<div class="filters"><label>${icon('calendar',13)} 起始 <select id="fromMonth" aria-label="起始月份">${options(state.start)}</select></label><label>至 <select id="toMonth" aria-label="结束月份">${options(state.end)}</select></label><label>${icon('folder',13)}<select id="projectFilter" aria-label="筛选项目"><option value="">所有项目</option>${(data?.projects||[]).map(p=>`<option value="${h(p.value)}" ${p.value===state.project?'selected':''}>${h(p.label)}</option>`).join('')}</select></label><label><select id="timezone" aria-label="统计时区">${[...new Set(['UTC','Asia/Shanghai','America/Los_Angeles',state.tz])].map(t=>`<option value="${h(t)}" ${state.tz===t?'selected':''}>${h(t)}</option>`).join('')}</select></label><button class="btn ghost small" data-action="reset-filters" title="重置筛选">${icon('refresh',12)}</button><span class="filter-spacer"></span><span class="period">${h(data?.summary.start||data?.monthly[0]?.month||'—')} — ${h(data?.summary.end||data?.monthly.at(-1)?.month||'—')}</span></div>`;
 }
+function usagePage(){return `${pageTitle('','Token 用量','查看已记录的消耗、找到需要回看的任务。先了解数据覆盖，再比较使用方式。')}${filters(state.usage)}${demoNotice()}${window.EvolutionUsage.render(state.usage)}`;}
+function improvePage(){return `${pageTitle('','改进工作台','把一次使用中的发现，变成下一次可以验证的小调整。')}${filters()}${demoNotice()}${window.EvolutionImprove.render(state.data,state.mode)}`;}
 function pageTitle(kicker,title,description,actions=''){return `<section class="page-title between"><div>${kicker?`<div class="eyebrow">${h(kicker)}</div>`:''}<h1>${h(title)}</h1><p>${h(description)}</p></div>${actions?`<div class="actions">${actions}</div>`:''}</section>`;}
 function demoNotice(){return state.mode==='demo'?`<div class="demo-strip">${icon('info',16)}<span><strong>正在体验合成示例</strong> · 这些数字来自演示样本，导入记录后可查看自己的结果。</span><button class="btn ghost small nowrap" data-page="data">导入我的记录 ${icon('arrow',14)}</button></div>`:'';}
 function heatColor(value,gold=false){
@@ -219,17 +223,29 @@ function reportPage(){return `${pageTitle('','复盘报告','把提示习惯的�
  <details class="report-details mb"><summary>这些数字如何解读</summary><p class="muted">短提示可能依赖充分的上下文，验证词增加也不代表实际执行了更多测试。这些统计描述表达习惯，不能用于能力评分或因果判断。</p><button class="btn ghost mt" data-action="methodology">查看完整统计方式 ${icon('arrow',14)}</button></details>
  <details class="report-details"><summary>完整统计报告</summary><div class="report-body"><div id="reportText" class="markdown-view">正在生成…</div></div></details>`;}
 function dataPage(){const storage=state.status?.storage||{},last=storage.last_import;return `${pageTitle('','导入与隐私','选择本机 Codex 历史目录，或上传导出的对话文件。导入后，即可查看属于你的使用习惯和复盘报告。')}<div class="two-col"><section class="panel data-source"><div class="source-icon">${icon('folder',23)}</div><h2>读取本机 Codex 历史</h2><p class="small muted">选择 Codex home、sessions 文件夹或一个 JSONL / JSON 导出文件。</p><label class="field-label" for="importPath">本地路径</label><input id="importPath" class="input mono" placeholder="~/.codex" value="~/.codex"><p class="field-hint">使用了 CODEX_HOME 时，请填写对应目录。SQLite 仅用于可识别的线程元数据补充。</p><button class="btn primary mt" data-action="import-path">${icon('upload',14)}导入本机记录</button></section><section class="panel data-source"><div class="source-icon">${icon('upload',23)}</div><h2>选择历史文件</h2><p class="small muted mb">支持 history.jsonl、rollout JSONL 或标准消息 JSON。文件只传给本机服务。</p><div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="选择或拖入历史 JSONL 或 JSON 文件"><div class="accent">${icon('upload',24)}</div><p>拖入文件，或点击选择</p><small>JSONL / JSON · 浏览器单次请求上限 32 MiB</small></div><input type="file" class="file-input" id="historyUpload" accept=".jsonl,.json,application/json" multiple></section></div><div id="importFeedback"></div>
- <div class="two-col"><section class="panel"><div class="panel-head"><h2>已导入范围</h2><span class="badge green">本机数据库</span></div><div class="panel-body"><div class="data-line"><span>源文件</span><strong>${number(storage.source_count||0)}</strong></div><div class="data-line"><span>原始规范化记录（各角色）</span><strong>${number(storage.stored_records||0)}</strong></div><div class="data-line"><span>最近一次导入的坏 JSON 行</span><strong>${number(last?.invalid_json||0)}</strong></div><div class="data-line"><span>最近一次未知 / 未提取事件</span><strong>${number(last?.unknown_events||0)}</strong></div><div class="data-line"><span>最近一次无效时间戳</span><strong>${number(last?.invalid_timestamps||0)}</strong></div><div class="data-line"><span>最近一次记录的镜像输入</span><strong>${number(last?.mirrored_user_records||0)}</strong></div><p class="tiny subtle mt">明细是最近一批导入的诊断，不是全部历史的累计诊断。未知事件、损坏和截断会影响覆盖率。</p>${last?.warnings?.length?`<details><summary>导入警告（${last.warnings.length}）</summary><div class="notice">${last.warnings.map(w=>`<p>${h(w)}</p>`).join('')}</div></details>`:''}</div></section>
+ <div class="two-col"><section class="panel"><div class="panel-head"><h2>已导入范围</h2><span class="badge green">本机数据库</span></div><div class="panel-body"><div class="data-line"><span>源文件</span><strong>${number(storage.source_count||0)}</strong></div><div class="data-line"><span>原始规范化记录（各角色）</span><strong>${number(storage.stored_records||0)}</strong></div><div class="data-line"><span>最近一次导入的坏 JSON 行</span><strong>${number(last?.invalid_json||0)}</strong></div><div class="data-line"><span>最近一次未知 / 未提取事件</span><strong>${number(last?.unknown_events||0)}</strong></div><div class="data-line"><span>最近一次无效时间戳</span><strong>${number(last?.invalid_timestamps||0)}</strong></div><div class="data-line"><span>最近一次被拒绝的用量记录</span><strong>${number(last?.invalid_usage_records||0)}</strong></div><div class="data-line"><span>最近一次没有计数的旧用量事件</span><strong>${number(last?.usage_snapshots_without_info||0)}</strong></div><div class="data-line"><span>最近一次记录的镜像输入</span><strong>${number(last?.mirrored_user_records||0)}</strong></div><p class="tiny subtle mt">明细是最近一批导入的诊断，不是全部历史的累计诊断。未知事件、损坏和截断会影响覆盖率。</p>${last?.warnings?.length?`<details><summary>导入警告（${last.warnings.length}）</summary><div class="notice">${last.warnings.map(w=>`<p>${h(w)}</p>`).join('')}</div></details>`:''}</div></section>
  <section class="panel"><div class="panel-head"><h2>隐私与模型连接</h2><span class="badge ${state.status?.provider.available?'amber':'green'}">${state.status?.provider.available?'已配置，按次确认':'模型连接未启用'}</span></div><div class="panel-body"><div class="data-line"><span>基础统计 / 审计</span><strong>本地确定性计算</strong></div><div class="data-line"><span>网络监听</span><strong class="mono">127.0.0.1 only</strong></div><div class="data-line"><span>模型深审</span><strong>${state.status?.provider.available?h(state.status.provider.model):'未配置 · 可导出交给 Codex'}</strong></div><div class="data-line"><span>自动执行 / 修改 / 安装</span><strong>不提供</strong></div><div class="notice mt">可选 API 模式需要在启动服务前设置 OPENAI_API_KEY 和 CODEX_EVOLUTION_MODEL。密钥不进入浏览器。选择发送的材料会先做尽力脱敏并完整预览；模型没有工具权限。API 与 Codex 订阅认证分开。</div><button class="btn ghost small mt" data-action="model-setup">查看配置示例 ${icon('arrow',12)}</button></div></section></div>
  <section class="panel"><div class="panel-head"><h2>数据控制与口径</h2></div><div class="panel-body"><div class="notice mb">这不是云端账号全量导出。未持久化、已删除、其他设备或仅云端存在的线程不在范围内。内部日志格式可能随版本变化；遇到未知格式时会报告诊断，不伪造补全。</div><div class="flex wrap"><button class="btn" data-action="refresh-data">${icon('refresh',14)}刷新本机数据</button><button class="btn" data-action="methodology">${icon('info',14)}统计与去重口径</button><span class="spacer"></span><button class="btn danger" data-action="clear-confirm">${icon('trash',14)}删除应用内导入记录</button></div><p class="field-hint">删除仅作用于 Codex Evolution 的数据库，不触碰原始 Codex 历史；不承诺擦除操作系统备份或 SSD 残留。</p></div></section>`;}
 function renderPage(){if(!state.data)return;const title=NAV.find(n=>n[0]===state.page)?.[1]||'协作总览';$('#crumb').textContent=title;document.title=`${title} · Codex Evolution`;$('#dataset').value=state.mode;$('.sidebar')?.classList.remove('mobile-open');document.querySelectorAll('.nav-item').forEach(el=>{el.classList.toggle('active',el.dataset.page===state.page);if(el.dataset.page===state.page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
- const views={start:startPage,overview,explorer,timeline,audit:auditPage,skills:skillsPage,prompts:promptPage,reports:reportPage,data:dataPage};$('#content').innerHTML=`<div class="enter">${(views[state.page]||startPage)()}</div>`;
+ const views={start:startPage,overview,usage:usagePage,improve:improvePage,explorer,timeline,audit:auditPage,skills:skillsPage,prompts:promptPage,reports:reportPage,data:dataPage};$('#content').innerHTML=`<div class="enter">${(views[state.page]||startPage)()}</div>`;
  const id=++state.renderId;
  if(state.page==='explorer')loadEvidence().catch(error=>toast(error.message));
  if(state.page==='skills')api('workflows').then(result=>{if(id===state.renderId&&$('#skillCandidates')){state.workflows=result.candidates;$('#skillCandidates').innerHTML=skillCards(result.candidates);}}).catch(error=>{if($('#skillCandidates'))$('#skillCandidates').innerHTML=empty('未能提取工作流',error.message);});
  if(state.page==='reports')fetch('/api/report?'+query({format:'md'}),{headers:{'X-Evolution-Token':$('meta[name=evolution-token]').content}}).then(r=>{if(!r.ok)throw new Error('Report generation failed');return r.text();}).then(text=>{if(id===state.renderId&&$('#reportText'))$('#reportText').textContent=text;}).catch(error=>toast(error.message));
 }
-async function loadData(){const id=(state.loadId||0)+1;state.loadId=id;state.loading=true;const d=await api('analysis');if(state.loadId!==id)return;state.data=d;state.loading=false;renderPage();}
+async function loadData(){
+ const id=(state.loadId||0)+1;state.loadId=id;state.loading=true;
+ $('#content').inert=true;$('#main').setAttribute('aria-busy','true');$('#dataset').disabled=true;$('#datasetHint').textContent='正在更新…';
+ try{
+  const [d,u]=await Promise.all([api('analysis'),api('usage')]);if(state.loadId!==id)return;
+  state.data=d;state.usage=u;state.loading=false;renderPage();
+ }catch(error){
+  if(state.loadId===id&&state.data){state.mode=state.data.mode;Object.assign(state,state.data.filters);state.tz=state.data.timezone;state.loading=false;renderPage();}
+  throw error;
+ }finally{
+  if(state.loadId===id){state.loading=false;$('#content').inert=false;$('#main').removeAttribute('aria-busy');$('#dataset').disabled=false;$('#datasetHint').textContent='';}
+ }
+}
 function navigate(page){if(!NAV.some(n=>n[0]===page))page='start';state.page=page;history.replaceState(null,'','#'+page);renderPage();window.scrollTo(0,0);}
 function currentPrompt(id){const p=state.prompts.find(p=>p.id===id);if(!p)throw new Error('未找到提示词');return p.text+(state.promptContext.trim()?`\n\n## 本次任务上下文\n${state.promptContext.trim()}\n`:'');}
 function promptModal(id){state.selectedPrompt=id;const p=state.prompts.find(p=>p.id===id);showModal(p.title,`<p class="small muted mb">可以编辑后复制到 Codex。这里只生成指令，不自动执行任务。</p><textarea class="input" id="promptEditor" style="min-height:420px" spellcheck="false" aria-label="编辑提示词">${h(currentPrompt(id))}</textarea><div class="modal-actions"><button class="btn" data-action="download-prompt">${icon('download',14)}导出 .md</button><button class="btn primary" data-action="copy-editor">${icon('copy',14)}复制完整指令</button></div>`);}
@@ -260,10 +276,13 @@ function methodology(){showModal('统计口径 / 可解释，不伪装成测评'
 function commandPalette(){showModal('快速跳转',`<input class="input" id="commandSearch" placeholder="查找页面，例如：审计、Skill、报告…" autofocus aria-label="查找功能"><div class="command-list" id="commandList">${NAV.map(([key,label,ico])=>`<button class="command-row" data-page="${key}">${icon(ico,16)}${h(label)}<span class="spacer"></span>${icon('arrow',13)}</button>`).join('')}</div>`);$('#commandSearch').focus();}
 async function refreshStatus(){state.status=await api('status');}
 async function importFiles(files){if(!files?.length)return;const list=Array.from(files);if(list.reduce((s,f)=>s+f.size,0)>30*1024*1024)throw new Error('文件总量超过浏览器导入上限。请使用本机路径导入或 CLI。');toast('正在读取本机文件…');const payload=await Promise.all(list.map(async f=>({name:f.webkitRelativePath||f.name,text:await f.text()})));const result=await api('import-upload',{files:payload});await finishImport(result);}
-async function finishImport(result){state.mode='live';state.start=state.end=state.project='';await refreshStatus();await loadData();toast(`已导入 ${number(result.imported_records)} 条规范化记录；现在展示你的本机数据。`);if($('#importFeedback'))$('#importFeedback').innerHTML=`<div class="notice accent-notice mb">本次导入 ${result.imported_records} 条各角色记录；${result.invalid_json} 条坏 JSON，${result.invalid_timestamps} 条无效时间戳。统计已切换到本机数据。<button class="btn ghost small" data-page="overview">打开协作总览 ${icon('arrow',12)}</button></div>`;}
+async function finishImport(result){state.mode='live';state.start=state.end=state.project='';await refreshStatus();await loadData();toast(`已导入 ${number(result.imported_records)} 条规范化记录；现在展示你的本机数据。`);if($('#importFeedback'))$('#importFeedback').innerHTML=`<div class="notice accent-notice mb">本次导入 ${result.imported_records} 条各角色记录；${result.invalid_json} 条坏 JSON，${result.invalid_timestamps} 条无效时间戳；${result.invalid_usage_records||0} 条用量记录因字段无效未导入，${result.usage_snapshots_without_info||0} 条旧用量事件没有计数。统计已切换到本机数据。<button class="btn ghost small" data-page="overview">打开协作总览 ${icon('arrow',12)}</button></div>`;}
 async function action(el){
  const name=el.dataset.action;
+ if(state.loading&&!['close-modal','menu'].includes(name)){toast('正在更新数据，请稍候再操作。');return;}
+ if(name.startsWith('improve-')&&await window.EvolutionImprove.handleAction(name,el,{analysis:state.data,mode:state.mode,render:renderPage,toast,copy,downloadText}))return;
  switch(name){
+ case 'export-usage':{const data=await api('usage-export');downloadText(JSON.stringify(data,null,2),`codex-evolution-usage-${state.mode}.json`,'application/json');toast('已导出用量汇总，不包含线程标识、原文或项目路径。');break;}
  case 'try-demo':state.mode='demo';state.start=state.end=state.project='';await loadData();navigate('overview');break;
  case 'close-modal':$('#modal').close();break;
  case 'menu':$('#sidebar').classList.toggle('mobile-open');break;
@@ -319,6 +338,8 @@ document.addEventListener('click',async event=>{
 });
 document.addEventListener('input',event=>{
  const el=event.target;
+ if(state.loading)return;
+ if(window.EvolutionImprove.handleInput(el,state.mode))return;
  if(el.id==='instructionText')state.files[state.selectedFile].text=el.value;
  if(el.id==='instructionPath')state.files[state.selectedFile].path=el.value;
  if(el.id==='auditPath')state.auditPath=el.value;
@@ -330,6 +351,7 @@ document.addEventListener('input',event=>{
 document.addEventListener('change',async event=>{
  const el=event.target;
  try{
+ if(window.EvolutionImprove.handleInput(el,state.mode))return;
  if(el.id==='dataset'){state.mode=el.value;state.start=state.end=state.project='';await loadData();}
  if(el.id==='fromMonth'){state.start=el.value;if(state.end&&state.start>state.end)state.end=state.start;await loadData();}
  if(el.id==='toMonth'){state.end=el.value;if(state.start&&state.end&&state.end<state.start)state.start=state.end;await loadData();}
