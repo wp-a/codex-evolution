@@ -1,0 +1,17 @@
+{
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "widths": [
+    320,
+    360,
+    736,
+    1024,
+    1512
+  ],
+  "dataset_label_width": 146,
+  "keyboard_disclosure_focus": true,
+  "disclosure_body_inset": 25,
+  "javascript_errors": []
+}

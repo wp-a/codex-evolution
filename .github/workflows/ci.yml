@@ -1,0 +1,25 @@
+name: Tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m unittest discover -s tests -v
+      - run: python -m codex_evolution doctor
+      - run: python -m codex_evolution --db /tmp/evolution-ci.sqlite report --demo --format html --out /tmp/evolution-report.html
+      - run: python -m pip install .
+      - run: codex-evolution --version

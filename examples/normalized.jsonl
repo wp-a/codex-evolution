@@ -1,0 +1,21 @@
+{"thread_id": "example-a", "timestamp": "2026-01-01T12:00:00Z", "role": "user", "text": "规划本次范围，保持最小方案。", "project": "synthetic-project"}
+{"thread_id": "example-a", "timestamp": "2026-01-01T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-a", "timestamp": "2026-01-02T12:00:00Z", "role": "user", "text": "执行修改，交付当前实现。", "project": "synthetic-project"}
+{"thread_id": "example-a", "timestamp": "2026-01-02T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-a", "timestamp": "2026-01-02T12:00:02Z", "role": "tool", "tool": "exec_command", "text": "{\"cmd\":\"echo synthetic-fixture\"}", "project": "synthetic-project"}
+{"thread_id": "example-a", "timestamp": "2026-01-03T12:00:00Z", "role": "user", "text": "测试并核对证据。", "project": "synthetic-project"}
+{"thread_id": "example-a", "timestamp": "2026-01-03T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-01T12:00:00Z", "role": "user", "text": "规划本次范围，保持最小方案。", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-01T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-02T12:00:00Z", "role": "user", "text": "执行修改，交付当前实现。", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-02T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-02T12:00:02Z", "role": "tool", "tool": "exec_command", "text": "{\"cmd\":\"echo synthetic-fixture\"}", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-03T12:00:00Z", "role": "user", "text": "测试并核对证据。", "project": "synthetic-project"}
+{"thread_id": "example-b", "timestamp": "2026-05-03T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-01T12:00:00Z", "role": "user", "text": "规划本次范围，保持最小方案。", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-01T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-02T12:00:00Z", "role": "user", "text": "执行修改，交付当前实现。", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-02T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-02T12:00:02Z", "role": "tool", "tool": "exec_command", "text": "{\"cmd\":\"echo synthetic-fixture\"}", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-03T12:00:00Z", "role": "user", "text": "测试并核对证据。", "project": "synthetic-project"}
+{"thread_id": "example-c", "timestamp": "2026-09-03T12:00:01Z", "role": "assistant", "text": "这是格式演示，不是实际执行结果。", "project": "synthetic-project"}

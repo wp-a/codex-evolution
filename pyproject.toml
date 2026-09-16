@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codex-evolution"
+version = "0.1.1"
+description = "Local-first collaboration analytics, instruction audits, and evidence-backed skills for Codex."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Codex Evolution contributors"}]
+keywords = ["codex", "agent", "analytics", "agents-md", "skills", "local-first"]
+classifiers = ["Programming Language :: Python :: 3", "License :: OSI Approved :: MIT License", "Operating System :: OS Independent"]
+dependencies = []
+
+[project.scripts]
+codex-evolution = "codex_evolution.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["codex_evolution*"]
+
+[tool.setuptools.package-data]
+codex_evolution = ["web/*", "prompts/*.md"]

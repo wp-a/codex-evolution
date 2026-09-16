@@ -1,0 +1,47 @@
+{
+  "mode": "direct-localhost",
+  "checks": {
+    "first_use_introduction_and_navigation": true,
+    "start_responsive_widths": [
+      320,
+      360,
+      736,
+      1024,
+      1512
+    ],
+    "saved_theme_reload": true,
+    "light_default_and_theme_toggle": true,
+    "introduction_import_and_demo_actions": true,
+    "demo_metrics": true,
+    "heatmap_evidence": true,
+    "audit_quotes_and_protections": true,
+    "plan_audit": true,
+    "skill_draft": true,
+    "complete_prompt": true,
+    "report_progressive_disclosure": true,
+    "growth_dossier_and_evidence": true,
+    "growth_responsive_widths": [
+      320,
+      360,
+      736,
+      1024,
+      1512
+    ],
+    "html_and_png_exports": true,
+    "previewed_handoff": true,
+    "growth_short_window_and_filtered_export": true,
+    "message_search": true,
+    "month_filter": true,
+    "responsive_widths": [
+      360,
+      768,
+      1024,
+      1512
+    ],
+    "keyboard_palette": true,
+    "real_upload_and_empty_months": true,
+    "growth_imported_empty_months": true,
+    "delete_app_copy": true,
+    "javascript_errors": []
+  }
+}
